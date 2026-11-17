@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Student Dashboard</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='style.css') }}"
+    >
+
+</head>
+
+<body>
+
+<nav class="navbar">
+
+    <div>
+        <strong>Assignment Portal</strong>
+    </div>
+
+    <div>
+        Welcome, {{ session["name"] }}
+        |
+        <a href="{{ url_for('logout') }}">
+            Logout
+        </a>
+    </div>
+
+</nav>
+
+<div class="container">
+
+    <h1>Student Dashboard</h1>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+
+        {% for category, message in messages %}
+
+            <div class="alert {{ category }}">
+                {{ message }}
+            </div>
+
+        {% endfor %}
+
+    {% endwith %}
+
+
+    <div class="stats">
+
+        <div class="stat-card">
+            <h3>Total Assignments</h3>
+            <p>{{ total_assignments }}</p>
+        </div>
+
+        <div class="stat-card">
+            <h3>Pending</h3>
+            <p>{{ pending_assignments }}</p>
+        </div>
+
+        <div class="stat-card">
+            <h3>Submitted</h3>
+            <p>{{ submitted_assignments }}</p>
+        </div>
+
+        <div class="stat-card">
+            <h3>Graded</h3>
+            <p>{{ graded_assignments }}</p>
+        </div>
+
+    </div>
+
+
+    <h2>Assignments</h2>
+
+    {% if assignments %}
+
+        <div class="table-container">
+
+            <table>
+
+                <thead>
+
+                    <tr>
+                        <th>Title</th>
+                        <th>Teacher</th>
+                        <th>Deadline</th>
+                        <th>Status</th>
+                        <th>Marks</th>
+                        <th>Action</th>
+                    </tr>
+
+                </thead>
+
+                <tbody>
+
+                    {% for assignment in assignments %}
+
+                    <tr>
+
+                        <td>
+                            {{ assignment["title"] }}
+                        </td>
+
+                        <td>
+                            {{ assignment["teacher_name"] }}
+                        </td>
+
+                        <td>
+                            {{ assignment["deadline"] }}
+                        </td>
+
+                        <td>
+
+                            {% if assignment["submission_status"] %}
+
+                                <span class="badge">
+                                    {{ assignment["submission_status"] }}
+                                </span>
+
+                            {% else %}
+
+                                <span class="badge pending">
+                                    NOT SUBMITTED
+                                </span>
+
+                            {% endif %}
+
+                        </td>
+
+                        <td>
+
+                            {% if assignment["marks"] is not none %}
+
+                                {{ assignment["marks"] }}
+                                /
+                                {{ assignment["max_marks"] }}
+
+                            {% else %}
+
+                                Not graded
+
+                            {% endif %}
+
+                        </td>
+
+                        <td>
+
+                            <a
+                                class="btn small"
+                                href="{{
+                                    url_for(
+                                        'assignment_details',
+                                        assignment_id=assignment['assignment_id']
+                                    )
+                                }}"
+                            >
+                                View
+                            </a>
+
+                        </td>
+
+                    </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    {% else %}
+
+        <div class="empty-state">
+            No assignments available.
+        </div>
+
+    {% endif %}
+
+</div>
+
+</body>
+</html>

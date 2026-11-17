@@ -1,0 +1,122 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Assignment Details</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+
+<nav class="navbar">
+    <strong>Assignment Portal</strong>
+
+    {% if session["role"] == "student" %}
+        <a href="{{ url_for('student_dashboard') }}">Dashboard</a>
+    {% else %}
+        <a href="{{ url_for('teacher_dashboard') }}">Dashboard</a>
+    {% endif %}
+</nav>
+
+<div class="container narrow">
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, message in messages %}
+            <div class="alert {{ category }}">{{ message }}</div>
+        {% endfor %}
+    {% endwith %}
+
+    <div class="card">
+
+        <h1>{{ assignment["title"] }}</h1>
+
+        <p><strong>Teacher:</strong> {{ assignment["teacher_name"] }}</p>
+        <p><strong>Deadline:</strong> {{ assignment["deadline"] }}</p>
+        <p><strong>Maximum Marks:</strong> {{ assignment["max_marks"] }}</p>
+
+        <h3>Description</h3>
+
+        <div class="description">
+            {{ assignment["description"] or "No description provided." }}
+        </div>
+
+        {% if session["role"] == "student" %}
+
+            <hr>
+
+            {% if submission %}
+
+                <h2>My Submission</h2>
+
+                <p>
+                    <strong>Submission URL:</strong>
+                    {% if submission["submission_url"] %}
+                        <a href="{{ submission['submission_url'] }}"
+                           target="_blank"
+                           rel="noopener noreferrer">
+                            {{ submission["submission_url"] }}
+                        </a>
+                    {% else %}
+                        No URL submitted.
+                    {% endif %}
+                </p>
+
+                <p>
+                    <strong>Status:</strong>
+                    {{ submission["submission_status"] }}
+                </p>
+
+                <p>
+                    <strong>Submitted:</strong>
+                    {{ submission["submitted_at"] }}
+                </p>
+
+                {% if submission["marks"] is not none %}
+
+                    <div class="result-box">
+                        <h3>Result</h3>
+
+                        <p>
+                            <strong>Marks:</strong>
+                            {{ submission["marks"] }} /
+                            {{ assignment["max_marks"] }}
+                        </p>
+
+                        <p>
+                            <strong>Feedback:</strong>
+                            {{ submission["feedback"] or "No feedback provided." }}
+                        </p>
+                    </div>
+
+                {% else %}
+
+                    <p>Your submission has not been graded yet.</p>
+
+                {% endif %}
+
+                <a href="{{ url_for('submit_assignment', assignment_id=assignment['assignment_id']) }}"
+                   class="btn secondary">
+                    Resubmit
+                </a>
+
+            {% else %}
+
+                <p>You have not submitted this assignment.</p>
+
+                <a href="{{ url_for('submit_assignment', assignment_id=assignment['assignment_id']) }}"
+                   class="btn">
+                    Submit Assignment
+                </a>
+
+            {% endif %}
+
+        {% endif %}
+
+    </div>
+
+</div>
+
+</body>
+</html>

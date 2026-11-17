@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Create Assignment</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='style.css') }}"
+    >
+
+</head>
+
+<body>
+
+<nav class="navbar">
+
+    <strong>Assignment Portal</strong>
+
+    <a href="{{ url_for('teacher_dashboard') }}">
+        Dashboard
+    </a>
+
+</nav>
+
+
+<div class="container narrow">
+
+    <div class="card">
+
+        <h1>Create Assignment</h1>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+
+            {% for category, message in messages %}
+
+                <div class="alert {{ category }}">
+                    {{ message }}
+                </div>
+
+            {% endfor %}
+
+        {% endwith %}
+
+
+        <form method="POST">
+
+            <label>Assignment Title</label>
+
+            <input
+                type="text"
+                name="title"
+                placeholder="Example: Python Programming Assignment"
+                required
+            >
+
+
+            <label>Description</label>
+
+            <textarea
+                name="description"
+                rows="5"
+                placeholder="Enter assignment description"
+            ></textarea>
+
+
+            <label>Deadline</label>
+
+            <input
+                type="datetime-local"
+                name="deadline"
+                required
+            >
+
+
+            <label>Maximum Marks</label>
+
+            <input
+                type="number"
+                name="max_marks"
+                min="1"
+                placeholder="100"
+                required
+            >
+
+
+            <button
+                type="submit"
+                class="btn"
+            >
+                Create Assignment
+            </button>
+
+        </form>
+
+    </div>
+
+</div>
+
+</body>
+</html>

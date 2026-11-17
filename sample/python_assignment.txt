@@ -1,0 +1,26 @@
+Python Programming Basics
+
+Name: Demo Student
+
+1. Variables
+
+A variable is used to store data in Python.
+
+Example:
+
+name = "Student"
+age = 20
+
+2. Conditional Statement
+
+Example:
+
+if age >= 18:
+    print("Adult")
+
+3. Loop
+
+Example:
+
+for i in range(5):
+    print(i)

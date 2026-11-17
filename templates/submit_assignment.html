@@ -1,0 +1,69 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Submit Assignment</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<nav class="navbar">
+    <strong>Assignment Portal</strong>
+    <a href="{{ url_for('student_dashboard') }}">Dashboard</a>
+</nav>
+
+<div class="container narrow">
+    <div class="card">
+
+        <h1>Submit Assignment</h1>
+        <h2>{{ assignment["title"] }}</h2>
+
+        <p><strong>Deadline:</strong> {{ assignment["deadline"] }}</p>
+        <p><strong>Maximum Marks:</strong> {{ assignment["max_marks"] }}</p>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% for category, message in messages %}
+                <div class="alert {{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endwith %}
+
+        {% if existing_submission %}
+            <div class="info-box">
+                <strong>Previous submission:</strong>
+                <a href="{{ existing_submission['submission_url'] }}"
+                   target="_blank">
+                    {{ existing_submission['submission_url'] }}
+                </a>
+                <br>
+                Status: {{ existing_submission["submission_status"] }}
+            </div>
+        {% endif %}
+
+        <form method="POST">
+
+            <label>Assignment Submission URL</label>
+
+            <input
+                type="url"
+                name="submission_url"
+                placeholder="https://github.com/username/project"
+                required
+            >
+
+            <p class="help-text">
+                Paste your assignment or project link here.
+            </p>
+
+            <button type="submit" class="btn">
+                Submit Assignment
+            </button>
+
+        </form>
+
+    </div>
+</div>
+
+</body>
+</html>

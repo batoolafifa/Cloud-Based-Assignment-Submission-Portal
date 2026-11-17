@@ -1,0 +1,117 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>View Submissions</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+
+<nav class="navbar">
+    <strong>Assignment Portal</strong>
+    <a href="{{ url_for('teacher_dashboard') }}">Dashboard</a>
+</nav>
+
+<div class="container">
+
+    <h1>Submissions</h1>
+
+    <div class="card">
+        <h2>{{ assignment["title"] }}</h2>
+        <p><strong>Maximum Marks:</strong> {{ assignment["max_marks"] }}</p>
+        <p><strong>Deadline:</strong> {{ assignment["deadline"] }}</p>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, message in messages %}
+            <div class="alert {{ category }}">{{ message }}</div>
+        {% endfor %}
+    {% endwith %}
+
+    {% if submissions %}
+
+        {% for submission in submissions %}
+
+        <div class="submission-card">
+
+            <h2>{{ submission["student_name"] }}</h2>
+
+            <p>
+                <strong>Registration Number:</strong>
+                {{ submission["registration_number"] or "Not provided" }}
+            </p>
+
+            <p>
+                <strong>Email:</strong>
+                {{ submission["student_email"] }}
+            </p>
+
+            <p>
+                <strong>Submission URL:</strong>
+                <a href="{{ submission['submission_url'] }}"
+                   target="_blank"
+                   rel="noopener noreferrer">
+                    {{ submission["submission_url"] or "No URL submitted" }}
+                </a>
+            </p>
+
+            <p>
+                <strong>Submitted:</strong>
+                {{ submission["submitted_at"] }}
+            </p>
+
+            <p>
+                <strong>Status:</strong>
+                {{ submission["submission_status"] }}
+            </p>
+
+            <hr>
+
+            <form method="POST"
+                  action="{{ url_for('grade_submission', submission_id=submission['submission_id']) }}">
+
+                <label>Marks</label>
+
+                <input
+                    type="number"
+                    name="marks"
+                    min="0"
+                    max="{{ assignment['max_marks'] }}"
+                    value="{{ submission['marks'] if submission['marks'] is not none else '' }}"
+                    required
+                >
+
+                <label>Feedback</label>
+
+                <textarea
+                    name="feedback"
+                    rows="4"
+                    placeholder="Enter feedback for the student"
+                >{{ submission["feedback"] or "" }}</textarea>
+
+                <button type="submit" class="btn">
+                    Save Marks & Feedback
+                </button>
+
+            </form>
+
+        </div>
+
+        {% endfor %}
+
+    {% else %}
+
+        <div class="empty-state">
+            <h2>No submissions yet.</h2>
+            <p>Students have not submitted this assignment.</p>
+        </div>
+
+    {% endif %}
+
+</div>
+
+</body>
+</html>
