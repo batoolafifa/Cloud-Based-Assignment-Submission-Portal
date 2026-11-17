@@ -4,7 +4,7 @@ import uuid
 from datetime import datetime, timedelta
 
 from app import app
-from database import get_db_connection
+from database import get_db_connection, init_database
 
 
 class AssignmentPortalTests(unittest.TestCase):
@@ -12,6 +12,9 @@ class AssignmentPortalTests(unittest.TestCase):
     def setUp(self):
         app.config["TESTING"] = True
         self.client = app.test_client()
+
+        # Initialize database before every test
+        init_database()
 
         self.unique_id = uuid.uuid4().hex[:8]
         self.email = f"test_{self.unique_id}@example.com"
@@ -118,7 +121,6 @@ class AssignmentPortalTests(unittest.TestCase):
 
         self.assertIsNotNone(submission)
         self.assertEqual(submission["submission_url"], url)
-
         self.assertIn(url.encode(), response.data)
 
     def test_missing_registration_number_is_rejected(self):
