@@ -1,43 +1,110 @@
 
-from flask import Flask, request, jsonify
-from pathlib import Path
-from datetime import datetime
 import json
 import os
-import hmac
+import sys
+import unittest
+import urllib.request
+from datetime import datetime, timezone
+from pathlib import Path
 
-app = Flask(__name__)
 
-REPORT_FILE = Path(__file__).resolve().parent / "test-report.json"
+class ReportResult(unittest.TextTestResult):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.test_details = []
+        self.passed_count = 0
+
+    def addSuccess(self, test):
+        super().addSuccess(test)
+        self.passed_count += 1
+        self.test_details.append({
+            "name": test.id(),
+            "result": "passed",
+            "failure_message": None
+        })
+
+    def addFailure(self, test, err):
+        super().addFailure(test, err)
+        self.test_details.append({
+            "name": test.id(),
+            "result": "failed",
+            "failure_message": self._exc_info_to_string(err, test)
+        })
+
+    def addError(self, test, err):
+        super().addError(test, err)
+        self.test_details.append({
+            "name": test.id(),
+            "result": "error",
+            "failure_message": self._exc_info_to_string(err, test)
+        })
 
 
-@app.route("/receive-report", methods=["POST"])
-def receive_report():
-    expected_token = os.getenv("REPORT_TOKEN")
-    received_token = request.headers.get("X-Report-Token", "")
+def main():
 
-    if not expected_token:
-        return jsonify({"error": "Receiver token is not configured"}), 503
+    suite = unittest.defaultTestLoader.discover("tests")
 
-    if not hmac.compare_digest(received_token, expected_token):
-        return jsonify({"error": "Unauthorized"}), 401
+    runner = unittest.TextTestRunner(
+        verbosity=2,
+        resultclass=ReportResult
+    )
 
-    report = request.get_json(silent=True)
+    result = runner.run(suite)
 
-    if not isinstance(report, dict):
-        return jsonify({"error": "Invalid report"}), 400
+    failed = len(result.failures) + len(result.errors)
 
-    report["received_at"] = datetime.now().isoformat(timespec="seconds")
+    report = {
+        "repository": os.getenv("GITHUB_REPOSITORY", "local"),
+        "branch": os.getenv("GITHUB_REF_NAME", "local"),
+        "commit_sha": os.getenv("GITHUB_SHA", "local"),
+        "pipeline_run_id": os.getenv("GITHUB_RUN_ID", "local"),
+        "execution_timestamp": datetime.now(timezone.utc).isoformat(),
+        "tests": result.test_details,
+        "total_tests": result.testsRun,
+        "passed": result.passed_count,
+        "failed": failed,
+        "overall_status": "passed" if result.wasSuccessful() else "failed"
+    }
 
-    with open(REPORT_FILE, "w", encoding="utf-8") as file:
-        json.dump(report, file, indent=4)
+    Path("test-report.json").write_text(
+        json.dumps(report, indent=4),
+        encoding="utf-8"
+    )
 
-    return jsonify({
-        "message": "Test report received successfully",
-        "file": str(REPORT_FILE)
-    }), 200
+    print("\nTest report created successfully.")
+
+    receiver_url = os.getenv("REPORT_RECEIVER_URL")
+    token = os.getenv("REPORT_TOKEN")
+
+    if receiver_url and token:
+
+        request = urllib.request.Request(
+            receiver_url.rstrip("/") + "/receive-report",
+            data=json.dumps(report).encode("utf-8"),
+            headers={
+                "Content-Type": "application/json",
+                "X-Report-Token": token
+            },
+            method="POST"
+        )
+
+        try:
+            with urllib.request.urlopen(request, timeout=30) as response:
+                print("Report delivery successful:")
+                print(response.read().decode("utf-8"))
+
+        except Exception as error:
+            print("Report delivery failed:", error)
+            sys.exit(2)
+
+    else:
+        print("Report receiver settings are missing.")
+        sys.exit(2)
+
+    if not result.wasSuccessful():
+        sys.exit(1)
 
 
 if __name__ == "__main__":
-    print("Local Report Receiver is running...")
-    app.run(host="0.0.0.0", port=5001)
+    main()
