@@ -3,15 +3,13 @@ name: CI - Automated Tests
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
   pull_request:
-    branches:
-      - main
+    branches: [main]
 
 jobs:
   test:
-    name: Run Automated Tests
+    name: Run Tests and Send Report
     runs-on: ubuntu-latest
 
     steps:
@@ -28,6 +26,8 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Run Automated Tests
-        run: |
-          python -m unittest discover -s tests -v
+      - name: Run Tests and Send Report
+        env:
+          REPORT_RECEIVER_URL: ${{ secrets.REPORT_RECEIVER_URL }}
+          REPORT_TOKEN: ${{ secrets.REPORT_TOKEN }}
+        run: python run_tests.py
