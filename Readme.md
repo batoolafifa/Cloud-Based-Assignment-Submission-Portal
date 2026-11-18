@@ -10,6 +10,10 @@
 </p>
 
 <p align="center">
+  <a href="https://github.com/batoolafifa/Cloud-Based-Assignment-Submission-Portal/actions/workflows/ci.yml"><img src="https://github.com/batoolafifa/Cloud-Based-Assignment-Submission-Portal/actions/workflows/ci.yml/badge.svg" alt="CI - Automated Tests"></a>
+</p>
+
+<p align="center">
   <strong>A cloud-ready student assignment submission, evaluation, and feedback management platform.</strong>
 </p>
 
@@ -19,13 +23,15 @@
 
 ---
 
-## 👨‍💻 Author
+## 👩‍💻 Author
 
-**Vayunandan Mishra**
+**Afifa Batool**
 
-**ECE Student | Cloud Computing**
+**DevOps Lab Mid**
 
-GitHub: https://github.com/Vayu-143
+GitHub: https://github.com/batoolafifa
+
+**Credit:** the base portal was taken from the open-source project by **Vayunandan Mishra** (https://github.com/Vayu-143/Cloud-Based-Assignment-Submission-Portal). For the Lab Mid I added the URL validation, automated tests, the GitHub Actions CI pipeline, the local test report receiver and the Gmail test report.
 
 ---
 
@@ -504,6 +510,8 @@ Stores:
     |
     +-- app.py
     +-- database.py
+    +-- run_tests.py            (runs the tests and sends the report)
+    +-- report_receiver.py      (receives the report on my laptop)
     +-- requirements.txt
     +-- .env
     +-- .gitignore
@@ -526,6 +534,12 @@ Stores:
     |
     +-- database/
     |   +-- portal.db
+    |
+    +-- tests/
+    |   +-- test_app.py         (3 automated tests)
+    |
+    +-- .github/workflows/
+    |   +-- ci.yml              (GitHub Actions pipeline)
     |
     +-- screenshots/
         +-- assignment-created.png
@@ -564,6 +578,9 @@ Stores:
 - Visual Studio Code
 - Git
 - GitHub
+- GitHub Actions (CI)
+- Cloudflare Tunnel
+- Gmail SMTP
 
 ### Cloud Concepts
 
@@ -651,25 +668,86 @@ Sensitive configuration should not be committed to GitHub.
 
 ---
 
-## 🧪 Testing
+## 🧪 Automated Testing (Lab Mid)
 
-The application was manually tested through the complete end-to-end workflow.
+The tests are in `tests/test_app.py`:
 
-| Test Case | Result |
+| # | Test | What it checks |
+|---|---|---|
+| 1 | `test_valid_submission_is_saved_and_listed` | A valid submission is saved and appears in the list |
+| 2 | `test_missing_registration_number_is_rejected` | A submission with a missing registration number is rejected |
+| 3 | `test_invalid_url_is_rejected_and_not_saved` | An invalid submission URL is rejected and not saved |
+
+### Run the tests locally
+
+    pip install -r requirements.txt
+    python run_tests.py
+
+This runs the 3 tests and creates `test-report.json`.
+
+---
+
+## ⚙️ CI Pipeline (GitHub Actions)
+
+The pipeline is in `.github/workflows/ci.yml` and runs automatically on every push to `main`.
+
+    git push
+       |
+       v
+    GitHub Actions runner (ubuntu-latest)
+       |
+       +-- Checkout code, set up Python, install dependencies
+       |
+       +-- Run tests (run_tests.py)
+       |       |
+       |       +-- Send test-report.json to my laptop (receiver)
+       |
+       +-- Email the test report via Gmail (pass and fail)
+       |
+       +-- Fail the pipeline if any test failed
+
+- If any test fails, the pipeline fails (red).
+- The report and the email are sent on both passing and failing runs.
+
+---
+
+## 📥 Receive the Test Report on My Laptop
+
+1. Start the receiver (port 5001):
+
+        python report_receiver.py
+
+2. In a second terminal, start a Cloudflare tunnel:
+
+        cloudflared tunnel --url http://localhost:5001
+
+3. Copy the `https://....trycloudflare.com` address into the `REPORT_RECEIVER_URL` secret.
+
+After every pipeline run, the report is saved on the laptop as `test-report.json`. It contains the repository, branch, commit SHA, pipeline run ID, execution timestamp, every test with its result and failure message, and the total, passed and failed counts.
+
+Note: the quick tunnel address changes every time the tunnel restarts, so update the secret each time.
+
+---
+
+## 📧 Email Test Report (Gmail)
+
+After every run, the pipeline emails the report with `test-report.json` attached. The subject shows the result, for example `DevOps CI Test Report - success` or `DevOps CI Test Report - failure`.
+
+---
+
+## 🔑 Repository Secrets
+
+Settings → Secrets and variables → Actions → Repository secrets
+
+| Secret | Value |
 |---|---|
-| Teacher Login | ✅ Passed |
-| Student Login | ✅ Passed |
-| Role-Based Access | ✅ Passed |
-| Assignment Creation | ✅ Passed |
-| Student Assignment View | ✅ Passed |
-| File Upload | ✅ Passed |
-| Submission Tracking | ✅ Passed |
-| Teacher Submission View | ✅ Passed |
-| File Download | ✅ Passed |
-| Marks Entry | ✅ Passed |
-| Feedback Entry | ✅ Passed |
-| Student Result View | ✅ Passed |
-| Logout | ✅ Passed |
+| `REPORT_RECEIVER_URL` | Cloudflare tunnel address |
+| `REPORT_TOKEN` | Token sent with the report |
+| `EMAIL_ADDRESS` | Gmail address that sends the report |
+| `EMAIL_APP_PASSWORD` | Gmail App Password (needs 2-Step Verification) |
+| `EMAIL_TO` | Email address that receives the report |
+
+No password or address is written in the code.
 
 ---
 
@@ -701,7 +779,7 @@ The application was manually tested through the complete end-to-end workflow.
 
 ### 1. Clone the Repository
 
-    git clone https://github.com/Vayu-143/Cloud-Based-Assignment-Submission-Portal.git
+    git clone https://github.com/batoolafifa/Cloud-Based-Assignment-Submission-Portal.git
 
 ### 2. Open the Project
 
@@ -900,9 +978,8 @@ The following features can be implemented in future versions:
 - Malware scanning
 - Signed/private file URLs
 - Audit logging
-- Automated testing
 - Docker containerization
-- CI/CD pipeline
+- Automatic deployment (CD)
 - Cloud monitoring
 - Background task processing
 - Auto-scaling infrastructure
@@ -932,6 +1009,8 @@ This project helped develop practical knowledge of:
 - Error Handling
 - Git
 - GitHub
+- GitHub Actions (CI)
+- Automated Testing
 - Cloud Computing Concepts
 - Cloud-Ready Architecture
 - Object Storage Concepts
@@ -969,7 +1048,7 @@ The project demonstrates how authentication, authorization, application logic, d
 | Deployment | Localhost | Cloud Hosting |
 | Monitoring | Local Development | Cloud Monitoring |
 | Scaling | Single Application | Scalable Cloud Infrastructure |
-| CI/CD | Manual | Automated Pipeline |
+| CI | GitHub Actions (automated tests on every push) | Full CI/CD with deployment |
 
 ---
 
@@ -991,7 +1070,9 @@ The project demonstrates how authentication, authorization, application logic, d
 - ✅ Protected Routes
 - ✅ Cloud-Ready Architecture
 - ✅ GitHub Documentation
-- ✅ End-to-End Workflow Testing
+- ✅ Automated Tests on Every Push (GitHub Actions)
+- ✅ Test Report Delivered to Laptop
+- ✅ Email Test Report via Gmail
 
 ---
 
@@ -1019,34 +1100,16 @@ The project combines:
 
 ---
 
-## 👨‍💻 About Me
-
-I am **Vayunandan Mishra**, an **ECE Student** interested in **Cloud Computing, Python, Software Development, IoT, Artificial Intelligence, and modern technology**.
-
-I build practical, project-based solutions to strengthen my technical skills and create portfolio-ready proof of work.
-
-My focus is on understanding how software applications can be designed, developed, secured, documented, and prepared for real-world cloud environments.
-
----
-
-## 📫 Connect With Me
-
-**GitHub:**  
-https://github.com/Vayu-143
+## 📫 Links
 
 **GitHub Repository:**  
+https://github.com/batoolafifa/Cloud-Based-Assignment-Submission-Portal
+
+**Pipeline Runs:**  
+https://github.com/batoolafifa/Cloud-Based-Assignment-Submission-Portal/actions
+
+**Original base project:**  
 https://github.com/Vayu-143/Cloud-Based-Assignment-Submission-Portal
-
-**Areas of Interest:**
-
-- Cloud Computing
-- Python
-- Flask
-- Software Development
-- Web Development
-- IoT
-- Artificial Intelligence
-- Database Systems
 
 ---
 
@@ -1054,7 +1117,9 @@ https://github.com/Vayu-143/Cloud-Based-Assignment-Submission-Portal
 
 **Current Status:** ✅ Completed Local Version
 
-**Cloud Integration:** 🔄 Future Enhancement
+**CI Pipeline:** ✅ Automated tests, local report and email on every push
+
+**Cloud Deployment:** 🔄 Future Enhancement
 
 The current version successfully demonstrates the complete local workflow:
 
@@ -1100,5 +1165,5 @@ This project is developed for educational, academic, learning, and portfolio pur
 </p>
 
 <p align="center">
-  <strong>Vayunandan Mishra | ECE Student | Cloud Computing</strong>
+  <strong>Afifa Batool | DevOps Lab Mid</strong>
 </p>
