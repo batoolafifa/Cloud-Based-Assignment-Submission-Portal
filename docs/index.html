@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Assignment Submission Portal</title>
+<link rel="stylesheet" href="style.css">
+<style>
+ .status{display:inline-block;background:#dcfce7;color:#166534;border:1px solid #86efac;border-radius:20px;padding:8px 16px;font-size:14px;margin-bottom:18px}
+ label{display:block;font-weight:bold;margin:14px 0 6px}
+ input{width:100%;padding:10px;border:1px solid #ccc;border-radius:6px;font-size:15px}
+ table{width:100%;border-collapse:collapse;margin-top:10px}
+ th,td{border-bottom:1px solid #e5e7eb;padding:10px;text-align:left;font-size:14px;word-break:break-all}
+ th{background:#f9fafb}
+ footer{text-align:center;color:#6b7280;font-size:13px;margin:30px 0}
+</style>
+</head>
+<body>
+
+<nav class="navbar">
+  <strong>Assignment Portal</strong>
+  <span>Afifa Batool | DevOps Lab Mid</span>
+</nav>
+
+<div class="container narrow">
+
+  <div class="status">✅ Deployed after __PASSED__ tests passed · commit __COMMIT__ · run #__RUN__ · __TIME__</div>
+
+  <div class="card">
+    <h1>Submit Assignment</h1>
+
+    <div id="messages"></div>
+
+    <form id="form" novalidate>
+      <label for="name">Student name</label>
+      <input id="name" placeholder="Afifa Batool">
+
+      <label for="reg">Registration number</label>
+      <input id="reg" placeholder="SP23-BCS-000">
+
+      <label for="title">Assignment title</label>
+      <input id="title" placeholder="DevOps Lab Mid">
+
+      <label for="url">Assignment Submission URL</label>
+      <input id="url" placeholder="https://github.com/username/project">
+      <p class="help-text">Paste your assignment or project link here.</p>
+
+      <button type="submit" class="btn">Submit Assignment</button>
+    </form>
+  </div>
+
+  <div class="card" style="margin-top:20px">
+    <h2>Saved submissions</h2>
+    <div id="list"></div>
+  </div>
+
+  <footer>Static demo on GitHub Pages: submissions are saved in this browser only. The full Flask portal (login, database, grading) runs with <code>python app.py</code>.</footer>
+</div>
+
+<script>
+var KEY = "afifa-submissions";
+function load(){ try { return JSON.parse(localStorage.getItem(KEY)) || []; } catch(e){ return []; } }
+function save(list){ try { localStorage.setItem(KEY, JSON.stringify(list)); } catch(e){} }
+function esc(s){ var d=document.createElement("div"); d.textContent=s; return d.innerHTML; }
+function validUrl(v){
+  try { var u = new URL(v); return (u.protocol==="http:"||u.protocol==="https:") && u.hostname.indexOf(".")>0; }
+  catch(e){ return false; }
+}
+function show(){
+  var list = load(), box = document.getElementById("list");
+  if(!list.length){ box.innerHTML = '<p class="empty-state">No submissions yet.</p>'; return; }
+  var h = '<table><tr><th>Name</th><th>Reg No</th><th>Title</th><th>URL</th></tr>';
+  list.forEach(function(s){ h += '<tr><td>'+esc(s.name)+'</td><td>'+esc(s.reg)+'</td><td>'+esc(s.title)+'</td><td><a href="'+esc(s.url)+'" target="_blank" rel="noopener">'+esc(s.url)+'</a></td></tr>'; });
+  box.innerHTML = h + '</table>';
+}
+document.getElementById("form").addEventListener("submit", function(e){
+  e.preventDefault();
+  var v = function(id){ return document.getElementById(id).value.trim(); };
+  var s = {name:v("name"), reg:v("reg"), title:v("title"), url:v("url")}, errors = [];
+  if(!s.name) errors.push("Student name is required.");
+  if(!s.reg) errors.push("Registration number is required.");
+  if(!s.title) errors.push("Assignment title is required.");
+  if(!s.url) errors.push("Submission URL is required.");
+  else if(!validUrl(s.url)) errors.push("Please enter a valid URL.");
+  var m = document.getElementById("messages");
+  if(errors.length){
+    m.innerHTML = errors.map(function(x){ return '<div class="alert error">'+x+'</div>'; }).join("");
+    return;
+  }
+  var list = load(); list.push(s); save(list);
+  m.innerHTML = '<div class="alert success">Assignment submitted successfully.</div>';
+  this.reset(); show();
+});
+show();
+</script>
+</body>
+</html>
