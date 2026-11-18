@@ -1,3 +1,4 @@
+
 import os
 from datetime import datetime
 from pathlib import Path
@@ -102,7 +103,6 @@ def home():
 # --------------------------------------------------
 
 @app.route("/register", methods=["GET", "POST"])
-
 def register():
 
     if request.method == "POST":
@@ -175,7 +175,6 @@ def register():
         return redirect(url_for("login"))
 
     return render_template("register.html")
-
 
 
 # --------------------------------------------------
@@ -484,7 +483,6 @@ def assignment_details(assignment_id):
 # Submit Assignment
 # --------------------------------------------------
 
-
 @app.route(
     "/student/assignment/<int:assignment_id>/submit",
     methods=["GET", "POST"]
@@ -532,11 +530,8 @@ def submit_assignment(assignment_id):
 
         parsed_url = urlparse(submission_url)
 
-        if (
-            parsed_url.scheme not in ("http", "https")
-            or not parsed_url.netloc
-            or "." not in parsed_url.netloc
-        ):
+        # TEMPORARY DEFECT FOR CI DEMONSTRATION
+        if True:
             connection.close()
             flash("Please enter a valid URL.", "error")
             return redirect(request.url)
@@ -616,7 +611,6 @@ def submit_assignment(assignment_id):
 # --------------------------------------------------
 # Teacher: View Submissions
 # --------------------------------------------------
-
 
 
 # --------------------------------------------------
