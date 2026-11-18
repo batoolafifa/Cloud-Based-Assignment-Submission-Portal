@@ -26,8 +26,43 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Run Tests and Send Report
+      - name: Run Tests and Send Local Report
+        id: tests
+        continue-on-error: true
         env:
           REPORT_RECEIVER_URL: ${{ secrets.REPORT_RECEIVER_URL }}
           REPORT_TOKEN: ${{ secrets.REPORT_TOKEN }}
         run: python run_tests.py
+
+      - name: Send Test Report to Gmail
+        if: always() && steps.tests.outcome != 'skipped'
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 465
+          secure: true
+          username: ${{ secrets.EMAIL_ADDRESS }}
+          password: ${{ secrets.EMAIL_APP_PASSWORD }}
+          subject: "DevOps CI Test Report - ${{ steps.tests.outcome }}"
+          to: ${{ secrets.EMAIL_TO }}
+          from: ${{ secrets.EMAIL_ADDRESS }}
+          body: |
+            Hello,
+
+            Your DevOps assignment test execution is complete.
+
+            Repository: ${{ github.repository }}
+            Branch: ${{ github.ref_name }}
+            Commit: ${{ github.sha }}
+            Workflow Run: ${{ github.run_id }}
+            Test Status: ${{ steps.tests.outcome }}
+
+            The detailed JSON test report is attached.
+
+            Regards,
+            DevOps CI Pipeline
+          attachments: test-report.json
+
+      - name: Fail Pipeline if Tests Failed
+        if: always() && steps.tests.outcome == 'failure'
+        run: exit 1
